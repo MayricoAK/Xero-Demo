@@ -19,6 +19,14 @@ class XeroController {
       req.session.allTenants = tenants;
       req.session.activeTenant = tenants[0];
 
+      // Save session before redirect
+      await new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+
       // Redirect to the frontend
       res.redirect(process.env.FRONTEND_URL || "http://localhost:5173");
     } catch (error) {
@@ -60,11 +68,6 @@ class XeroController {
         return res.status(401).json({ error: "No active Xero connection" });
       }
 
-      // Refresh token if needed
-      req.session.tokenSet = await xeroService.refreshToken(
-        req.session.tokenSet
-      );
-
       const organizations = await xeroService.getOrganizations(
         req.session.activeTenant.tenantId
       );
@@ -82,10 +85,6 @@ class XeroController {
         return res.status(401).json({ error: "No active Xero connection" });
       }
 
-      req.session.tokenSet = await xeroService.refreshToken(
-        req.session.tokenSet
-      );
-
       const params = {
         where: where || undefined,
         order: order || undefined,
@@ -95,6 +94,7 @@ class XeroController {
         pageSize: pageSize ? parseInt(pageSize, 10) : undefined,
       };
 
+      // Remove undefined values
       Object.keys(params).forEach(
         (key) => params[key] === undefined && delete params[key]
       );
@@ -109,7 +109,7 @@ class XeroController {
       next(error);
     }
   }
-  
+
   async getInvoiceById(req, res, next) {
     try {
       if (!req.session.activeTenant) {
@@ -120,11 +120,6 @@ class XeroController {
       if (!id) {
         return res.status(400).json({ error: "Invoice ID is required" });
       }
-
-      // Refresh token if needed
-      req.session.tokenSet = await xeroService.refreshToken(
-        req.session.tokenSet
-      );
 
       const invoice = await xeroService.getInvoiceById(
         req.session.activeTenant.tenantId,

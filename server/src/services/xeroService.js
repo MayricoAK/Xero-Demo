@@ -27,26 +27,69 @@ class XeroService {
 
   async refreshToken(tokenSet) {
     try {
-      if (tokenSet && this.isTokenExpired(tokenSet)) {
-        const newTokenSet = await xeroClient.refreshToken(
-          tokenSet.refresh_token
-        );
-        return newTokenSet;
+      // Validate input
+      if (!tokenSet) {
+        throw new Error("TokenSet is required for refresh");
       }
-      return tokenSet;
+
+      if (!tokenSet.refresh_token) {
+        throw new Error("Refresh token is missing from tokenSet");
+      }
+
+      // Check if token actually needs refreshing
+      if (!this.isTokenExpired(tokenSet)) {
+        console.log("Token is still valid, no refresh needed");
+        return tokenSet;
+      }
+
+      console.log("Refreshing token...");
+
+      // Perform the refresh
+      const newTokenSet = await xeroClient.refreshToken(tokenSet.refresh_token);
+
+      if (!newTokenSet) {
+        throw new Error("Failed to get new token from Xero");
+      }
+
+      console.log("Token refreshed successfully");
+      return newTokenSet;
     } catch (error) {
       console.error("Error refreshing token:", error);
+
+      // Log more details about the error
+      if (error.response) {
+        console.error("Xero API Error Response:", {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+        });
+      }
+
       throw error;
     }
   }
 
   isTokenExpired(tokenSet) {
-    if (!tokenSet || !tokenSet.expires_at) return true;
+    if (!tokenSet || !tokenSet.expires_at) {
+      console.log("Token is invalid or missing expires_at");
+      return true;
+    }
 
     const expiresAt = tokenSet.expires_at * 1000;
-    const now = new Date().getTime() + 300000;
+    const now = new Date().getTime();
+    const bufferTime = 5 * 60 * 1000; // 5 minutes buffer
 
-    return now >= expiresAt;
+    const isExpired = now + bufferTime >= expiresAt;
+
+    if (isExpired) {
+      console.log(
+        `Token expired. Expires at: ${new Date(
+          expiresAt
+        )}, Current time: ${new Date(now)}`
+      );
+    }
+
+    return isExpired;
   }
 
   async getOrganizations(tenantId) {
@@ -72,6 +115,7 @@ class XeroService {
         pageSize: params.pageSize || undefined,
       };
 
+      // Remove undefined values
       Object.keys(modifiedParams).forEach(
         (key) => modifiedParams[key] === undefined && delete modifiedParams[key]
       );
@@ -86,8 +130,6 @@ class XeroService {
         modifiedParams.page,
         modifiedParams.pageSize
       );
-
-      console.log("Xero API response status:", response.response.statusCode);
 
       return response.body;
     } catch (error) {
