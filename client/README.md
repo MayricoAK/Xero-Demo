@@ -1,8 +1,60 @@
-# React + Vite
+# Xero Demo App - Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based frontend application for managing Xero invoices and bills.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Authentication with Xero OAuth2
+- View and manage sales invoices
+- View and manage supplier bills
+- Detailed invoice/bill views
+- Filter invoices by type and status
+
+## Tech Stack
+
+- React 18
+- React Router DOM 7
+- Vite
+- Tailwind CSS
+- shadcn/ui components
+- Axios for API calls
+
+## Project Structure
+
+```
+client/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── context/        # React context providers
+│   ├── hooks/          # Custom React hooks
+│   ├── lib/           # Utility functions and helpers
+│   ├── pages/         # Page components
+│   └── utils/         # Shared utilities
+├── public/            # Static assets
+└── ...config files
+```
+
+## Getting Started
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Create `.env.local` or `.env` file:
+```
+//Replace with your actual backend URL
+VITE_API_URL="http://localhost:3051" 
+```
+
+3. Start development server:
+```bash
+npm run dev
+```
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run lint` - Run ESLint
+- `npm run preview` - Preview production build
