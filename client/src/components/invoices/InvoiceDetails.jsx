@@ -22,29 +22,21 @@ export function InvoiceDetail() {
   const { isLoading, error, fetchInvoiceById } = useXero();
   const [invoice, setInvoice] = useState(null);
 
-  useEffect(() => {
-    const getInvoiceDetail = async () => {
-      try {
-        const data = await fetchInvoiceById(id);
-        setInvoice(data);
-      } catch (err) {
-        console.error("Failed to fetch invoice:", err);
-      }
-    };
-
-    if (id) {
-      getInvoiceDetail();
-    }
-  }, [id]);
-
-  const handleRetry = async () => {
+  const fetchInvoice = async () => {
     try {
       const data = await fetchInvoiceById(id);
+      console.log("Fetched invoice data:", data);
       setInvoice(data);
     } catch (err) {
       console.error("Failed to fetch invoice:", err);
     }
   };
+
+  useEffect(() => {
+    if (id) {
+      fetchInvoice();
+    }
+  }, [id]);
 
   const renderContactInfo = () => (
     <div>
@@ -161,95 +153,49 @@ export function InvoiceDetail() {
     </div>
   );
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Button
-          variant="outline"
-          onClick={() => window.history.back()}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft size={16} />
-          Back to Invoices
-        </Button>
-        <Card className="shadow-sm">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-center">
-              <div className="text-center">
-                <div className="h-8 w-8 mx-auto mb-4 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
-                <p className="text-gray-500">Loading invoice details...</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <Button
-          variant="outline"
-          onClick={() => window.history.back()}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft size={16} />
-          Back to Invoices
-        </Button>
-        <Card className="shadow-sm">
-          <CardContent className="p-8">
+  const renderCardContent = () => {
+    if (isLoading) {
+      return (
+        <CardContent className="p-8">
+          <div className="flex items-center justify-center">
             <div className="text-center">
-              <p className="text-red-500 mb-4">{error}</p>
-              <Button variant="outline" onClick={handleRetry} className="mt-4">
-                Retry
-              </Button>
+              <div className="h-8 w-8 mx-auto mb-4 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+              <p className="text-gray-500">Loading invoice details...</p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+          </div>
+        </CardContent>
+      );
+    }
 
-  if (!invoice) {
+    if (error) {
+      return (
+        <CardContent className="p-8">
+          <div className="text-center">
+            <p className="text-red-500 mb-4">{error}</p>
+            <Button variant="outline" onClick={fetchInvoice} className="mt-4">
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      );
+    }
+
+    if (!invoice) {
+      return (
+        <CardContent className="p-8">
+          <div className="text-center">
+            <p className="text-gray-500 mb-4">Invoice not found</p>
+            <Button variant="outline" onClick={() => navigate("/invoices")}>
+              Return to Invoice List
+            </Button>
+          </div>
+        </CardContent>
+      );
+    }
+
+    // Invoice data loaded successfully
     return (
-      <div className="space-y-6">
-        <Button
-          variant="outline"
-          onClick={() => window.history.back()}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft size={16} />
-          Back to Invoices
-        </Button>
-        <Card className="shadow-sm">
-          <CardContent className="p-8">
-            <div className="text-center">
-              <p className="text-gray-500 mb-4">Invoice not found</p>
-              <Button variant="outline" onClick={() => navigate("/invoices")}>
-                Return to Invoice List
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          onClick={() => window.history.back()}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft size={16} />
-          Back to Invoices
-        </Button>
-      </div>
-
-      <Card className="shadow-sm">
+      <>
         <CardHeader className="border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -272,7 +218,22 @@ export function InvoiceDetail() {
           {renderLineItems()}
           {renderTotals()}
         </CardContent>
-      </Card>
+      </>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <Button
+        variant="outline"
+        onClick={() => window.history.back()}
+        className="flex items-center gap-2"
+      >
+        <ArrowLeft size={16} />
+        Back to Invoices
+      </Button>
+
+      <Card className="shadow-sm">{renderCardContent()}</Card>
     </div>
   );
 }
